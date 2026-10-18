@@ -1,0 +1,24 @@
+`timescale 1ns / 1ps
+
+module Register(
+input clk,
+input wr_en,
+input [1:0]rd_addr,
+input [1:0]rs1_addr,
+input [1:0]rs2_addr,
+input [3:0]wr_data,
+output [3:0]rs1_data,
+output [3:0]rs2_data
+);
+
+reg [3:0]rf[0:3];
+
+assign rs1_data = rf[rs1_addr];
+assign rs2_data = rf[rs2_addr];
+
+always@(posedge clk)begin
+if(wr_en)
+rf[rd_addr] <= wr_data;
+rf[0] <= 4'd0;
+end
+endmodule
