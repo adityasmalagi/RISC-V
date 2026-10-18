@@ -1,0 +1,44 @@
+`timescale 1ns / 1ps
+
+module Register_tb();
+reg clk,wr_en;
+reg [1:0]rd_addr,rs1_addr,rs2_addr;
+reg [3:0]wr_data;
+wire [3:0]rs1_data,rs2_data;
+
+Register dut(.clk(clk), .wr_en(wr_en), .rd_addr(rd_addr), .rs1_addr(rs1_addr), .rs2_addr(rs2_addr), .wr_data(wr_data),
+ .rs1_data(rs1_data), .rs2_data(rs2_data));
+
+always #5 clk =~ clk;
+
+initial begin
+
+ clk=0; wr_en=0;
+
+        // Write 5 to R1
+        wr_en=1; rd_addr=2'd1; wr_data=4'd5;  #10;
+
+        // Write 9 to R2
+        wr_en=1; rd_addr=2'd2; wr_data=4'd9;  #10;
+
+        // Write 3 to R3
+        wr_en=1; rd_addr=2'd3; wr_data=4'd3;  #10;
+
+        // Try writing 7 to R0 - should stay 0
+        wr_en=1; rd_addr=2'd0; wr_data=4'd7;  #10;
+
+
+        // Read R1 and R2 simultaneously
+        wr_en=0;
+        rs1_addr=2'd1; rs2_addr=2'd2; #10;
+        // rs1_data should be 5, rs2_data should be 9
+
+        // Read R0 - should be 0
+        rs1_addr=2'd0; rs2_addr=2'd3; #10;
+        // rs1_data should be 0, rs2_data should be 3
+
+        // Read R1 and R3
+        rs1_addr=2'd1; rs2_addr=2'd3; #10;
+        // rs1_data=5, rs2_data=3
+end
+endmodule
