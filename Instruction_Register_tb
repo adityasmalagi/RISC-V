@@ -1,0 +1,19 @@
+`timescale 1ns / 1ps
+
+module Instruction_Register_tb();
+reg [3:0]addr;
+wire [7:0]inst;
+
+Instruction_Register dut(.addr(addr), .inst(inst));
+
+initial begin
+addr = 4'd1; #10;
+addr = 4'd2; #10;
+addr = 4'd3; #10;
+addr = 4'd4; #10;
+addr = 4'd5; #10;
+addr = 4'd6; #10;
+addr = 4'd15; #10;
+$finish;
+end
+endmodule
