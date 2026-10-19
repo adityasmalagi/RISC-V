@@ -1,0 +1,22 @@
+`timescale 1ns / 1ps
+
+module Program_counter_tb();
+reg clk,rst,load;
+reg [3:0]pc_in;
+wire [3:0]pc_out;
+
+program_counter dut(.clk(clk), .rst(rst), .load(load), .pc_in(pc_in), .pc_out(pc_out));
+
+always #5 clk =~clk;
+
+initial begin
+
+clk = 0; rst = 1; load = 0; pc_in = 4'b0; #20;
+
+rst = 0; #100;
+load = 1; pc_in = 4'd8; #10;
+load = 0; #60;
+rst = 1; #10;
+
+end
+endmodule
