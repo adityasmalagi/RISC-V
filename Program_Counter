@@ -1,0 +1,19 @@
+`timescale 1ns / 1ps
+
+module program_counter(
+input clk,
+input rst,
+input load,
+input [3:0]pc_in,
+output reg [3:0]pc_out
+    );
+    
+    always@(posedge clk)begin
+    if(rst)
+    pc_out <= 4'b0;
+    else if(load)
+    pc_out <= pc_in;
+    else
+    pc_out <= pc_in + 4'b1;
+end    
+endmodule
