@@ -46,18 +46,21 @@ Fast storage inside the CPU: 4 registers (R0 to R3), 4 bits each.
 | Combinational | ALU, register reads | `assign` or `always @(*)` with `=` |
 | Sequential | Register write | `always @(posedge clk)` with `<=` |
 
-# 4-bit RISC-V Style CPU in Verilog
+## Program Counter
 
-A 4-bit CPU written in Verilog and simulated in Xilinx Vivado, built one module at a time. The design is meant to scale later to 8-bit, 16-bit and 32-bit RISC-V.
+Holds the address of the instruction the CPU will fetch next. It does not store the instruction itself, only where it lives in instruction memory. Its output feeds the address input of the instruction memory.
 
-## ALU
-Does the calculation: ADD, SUB, AND, OR on two 4-bit inputs. It is combinational logic (no clock), and results wrap around in 4 bits. A `zero` flag goes high when the result is 0.
+- Sequential logic: changes only on the rising clock edge
+- 4 bits wide, so it covers 16 addresses (0 to 15) and wraps from 15 back to 0
+- Inputs: `clk`, `rst`, `load`, `pc_in[3:0]`
+- Output: `pc_out[3:0]`
 
-## Register File
-Fast storage inside the CPU: 4 registers (R0 to R3), 4 bits each. It has two read ports (combinational) and one write port (on the rising clock edge when `wr_en = 1`). R0 is hardwired to 0, so writes to it are ignored.
+| Condition | Behaviour |
+|-----------|-----------|
+| `rst = 1` | `pc_out` goes to 0 (start of the program) |
+| `load = 1` | `pc_out` jumps to `pc_in` (used later for branches and jumps) |
+| otherwise | `pc_out` increments by 1 every clock |
 
-Verified in simulation: wrote R1=5, R2=9, R3=3, tried writing 7 to R0 (stayed 0), and read all values back correctly.
-
-## Combinational vs Sequential
-- **Combinational** (ALU, register reads): `assign` or `always @(*)` with `=`
-- **Sequential** (register write): `always @(posedge clk)` with `<=`
+- Priority is reset first, then load, then increment
+- Written with `always @(posedge clk)` and non-blocking `<=`
+- Without `load`, the CPU can only run straight down the program, and loops and function calls need it
