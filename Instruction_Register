@@ -1,0 +1,18 @@
+`timescale 1ns / 1ps
+
+module Instruction_Register(
+input [3:0]addr,
+output reg[7:0]inst
+    );
+    
+    always@(*)begin
+    case(addr)
+    4'd0:  inst = 8'b00_01_00_10; // ADD   R1 = R0 + R2   // 12
+    4'd1:  inst = 8'b01_11_01_00; // SUB   R3 = R1 - R0   // 74
+    4'd2:  inst = 8'b10_01_00_00; // LOAD  R1 = Mem[R0]   //90
+    4'd3:  inst = 8'b11_00_10_11; // STORE Mem[R2] = R3   //cb
+    4'd4:  inst = 8'b00_10_01_11; // ADD   R2 = R1 + R3   //27
+    default: inst = 8'b00_00_00_00; // NOP                //00
+   endcase
+   end  
+endmodule
