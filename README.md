@@ -64,3 +64,39 @@ Holds the address of the instruction the CPU will fetch next. It does not store 
 - Priority is reset first, then load, then increment
 - Written with `always @(posedge clk)` and non-blocking `<=`
 - Without `load`, the CPU can only run straight down the program, and loops and function calls need it
+
+## Instruction Memory
+
+Stores the program. The PC gives an address and the 8-bit instruction stored at that address comes out. It only looks up and returns the instruction, it never decides anything.
+
+- ROM (read only): the CPU reads it while running and never writes to it
+- Combinational: `inst` changes as soon as `addr` changes, no clock needed
+- Input: `addr[3:0]` from the PC
+- Output: `inst[7:0]`
+- 4-bit address gives 16 locations, each 8 bits wide
+- Written as a `case` on the address inside `always @(*)` with blocking `=`
+- Every address without an instruction hits `default` and returns `00000000` (NOP)
+
+### Instruction format
+```
+[7:6] opcode | [5:4] Rd | [3:2] Rs1 | [1:0] Rs2
+```
+
+The memory does not understand these fields. It only outputs the 8 bits, and the Control Unit and Register File split them up later.
+
+### Stored program
+| Addr | Instruction | Meaning |
+|------|-------------|---------|
+| 0 | `00_01_00_10` | ADD R1 = R0 + R2 |
+| 1 | `01_11_01_00` | SUB R3 = R1 - R0 |
+| 2 | `10_01_00_00` | LOAD R1 = Mem[R0] |
+| 3 | `11_00_10_11` | STORE Mem[R2] = R3 |
+| 4 | `00_10_01_11` | ADD R2 = R1 + R3 |
+| 5 to 15 | `00_00_00_00` | NOP |
+
+A NOP decodes as `ADD R0 = R0 + R0`. R0 is always 0 and ignores writes, so nothing changes.
+
+### Why it is separate from data memory
+Instruction memory is read only and holds the program. Data memory is read and write and holds data. Keeping them separate is called Harvard architecture, and it lets the CPU fetch an instruction and access data in the same cycle.
+
+**Verified in simulation:** addr 1 to 4 return `74`, `90`, `cb`, `27` (hex), and addr 5, 6 and 15 return `00`.
