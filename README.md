@@ -45,3 +45,19 @@ Fast storage inside the CPU: 4 registers (R0 to R3), 4 bits each.
 |-------|----------|---------|
 | Combinational | ALU, register reads | `assign` or `always @(*)` with `=` |
 | Sequential | Register write | `always @(posedge clk)` with `<=` |
+
+# 4-bit RISC-V Style CPU in Verilog
+
+A 4-bit CPU written in Verilog and simulated in Xilinx Vivado, built one module at a time. The design is meant to scale later to 8-bit, 16-bit and 32-bit RISC-V.
+
+## ALU
+Does the calculation: ADD, SUB, AND, OR on two 4-bit inputs. It is combinational logic (no clock), and results wrap around in 4 bits. A `zero` flag goes high when the result is 0.
+
+## Register File
+Fast storage inside the CPU: 4 registers (R0 to R3), 4 bits each. It has two read ports (combinational) and one write port (on the rising clock edge when `wr_en = 1`). R0 is hardwired to 0, so writes to it are ignored.
+
+Verified in simulation: wrote R1=5, R2=9, R3=3, tried writing 7 to R0 (stayed 0), and read all values back correctly.
+
+## Combinational vs Sequential
+- **Combinational** (ALU, register reads): `assign` or `always @(*)` with `=`
+- **Sequential** (register write): `always @(posedge clk)` with `<=`
