@@ -100,3 +100,46 @@ A NOP decodes as `ADD R0 = R0 + R0`. R0 is always 0 and ignores writes, so nothi
 Instruction memory is read only and holds the program. Data memory is read and write and holds data. Keeping them separate is called Harvard architecture, and it lets the CPU fetch an instruction and access data in the same cycle.
 
 **Verified in simulation:** addr 1 to 4 return `74`, `90`, `cb`, `27` (hex), and addr 5, 6 and 15 return `00`.
+
+## Control Unit
+
+The brain of the CPU. It reads the 2-bit opcode of the instruction and sets the control signals that tell every other module what to do this cycle. It does no calculation and stores nothing.
+
+- Combinational logic: no clock, the signals change as soon as the opcode changes
+- Input: `opcode[1:0]` from `inst[7:6]`
+- Outputs: `wr_en`, `alu_op[1:0]`, `mem_read`, `mem_write`, `mem_to_reg`
+- Written with `always @(*)` and blocking `=`
+- Every output is given a default value at the top of the block, so no output is left unassigned and no latch is inferred in synthesis
+- The `case` on the opcode only changes the signals that differ from the defaults
+
+### Control signals
+| Signal | Purpose |
+|--------|---------|
+| `wr_en` | 1 = register file writes the result |
+| `alu_op` | Operation for the ALU: 00 ADD, 01 SUB |
+| `mem_read` | 1 = data memory outputs data (LOAD) |
+| `mem_write` | 1 = data memory stores data (STORE) |
+| `mem_to_reg` | Write-back select: 0 = ALU result, 1 = memory data |
+
+### Truth table
+| Opcode | Instruction | wr_en | alu_op | mem_read | mem_write | mem_to_reg |
+|--------|-------------|-------|--------|----------|-----------|------------|
+| 00 | ADD | 1 | 00 | 0 | 0 | 0 |
+| 01 | SUB | 1 | 01 | 0 | 0 | 0 |
+| 10 | LOAD | 1 | 00 | 1 | 0 | 1 |
+| 11 | STORE | 0 | 00 | 0 | 1 | 0 |
+
+### Why the values are set this way
+- **ADD / SUB:** the ALU computes and the result is written back to the register
+- **LOAD:** the ALU computes the address, memory is read, and `mem_to_reg = 1` writes the memory data into the register
+- **STORE:** `wr_en = 0` so no register is overwritten, and `mem_write = 1` stores the value into memory
+
+### Connections
+```
+Instruction Memory -> inst[7:6] -> Control Unit
+                                     -> wr_en       -> Register File
+                                     -> alu_op      -> ALU
+                                     -> mem_read    -> Data Memory
+                                     -> mem_write   -> Data Memory
+                                     -> mem_to_reg  -> Write-back MUX
+```
