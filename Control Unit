@@ -1,0 +1,44 @@
+`timescale 1ns / 1ps
+
+module Control_Unit(
+input [1:0]opcode,
+output reg wr_en,
+output reg [1:0]alu_op,
+output reg mem_read,
+output reg mem_write,
+output reg mem_to_reg
+    );
+    
+    always@(*)begin
+    
+    // default , so every output is always assigned
+    wr_en = 1'b0;
+    alu_op = 2'b00;
+    mem_read = 1'b0;
+    mem_write = 1'b0;
+    mem_to_reg = 1'b0;
+    
+    case(opcode)
+    2'b00:begin // add
+    wr_en = 1'b1;
+    alu_op = 2'b00;
+    end
+    
+    2'b01: begin  // sub
+    wr_en = 1'b1;
+    alu_op = 2'b01;
+    end
+    
+    2'b10:begin  //load
+    wr_en  = 1'b1;
+    alu_op = 2'b00;
+    mem_read = 1'b1;
+    mem_to_reg = 1'b1;
+    end
+    
+    2'b11: begin   //store
+    mem_write = 1'b1;
+    end
+    endcase
+    end
+endmodule
