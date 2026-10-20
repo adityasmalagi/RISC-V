@@ -1,0 +1,17 @@
+`timescale 1ns / 1ps
+
+module Control_Unit_tb();
+reg [1:0]opcode;
+wire wr_en,mem_read, mem_write, mem_to_reg;
+wire [1:0]alu_op;
+
+Control_Unit dut(.wr_en(wr_en), .opcode(opcode), .mem_read(mem_read), .mem_write(mem_write), .mem_to_reg(mem_to_reg), .alu_op(alu_op));
+
+initial begin
+opcode = 2'b00; #10;  //add
+opcode = 2'b01; #10;  //sub
+opcode = 2'b10; #10;   // load
+opcode = 2'b11; #10;   //store
+$finish;
+end
+endmodule
