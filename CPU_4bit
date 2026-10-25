@@ -1,0 +1,42 @@
+`timescale 1ns / 1ps
+module CPU_4bit (
+    input clk,
+    input rst
+);
+
+    wire [3:0] pc_out;
+    wire [7:0] inst;
+    wire [1:0] opcode, rd_addr, rs1_addr, rs2_addr;
+    wire       wr_en, mem_read, mem_write, mem_to_reg, zero;
+    wire [1:0] alu_op;
+    wire [3:0] rs1_data, rs2_data, result, rd_data, wb_data;
+
+    assign opcode   = inst[7:6];
+    assign rd_addr  = inst[5:4];
+    assign rs1_addr = inst[3:2];
+    assign rs2_addr = inst[1:0];
+
+    program_counter PC0 (.clk(clk), .rst(rst), .load(1'b0), .pc_in(4'd0),
+            .pc_out(pc_out));
+
+    Instruction_Register IM0 (.addr(pc_out), .inst(inst));
+
+    Control_Unit CU0 (.opcode(opcode), .wr_en(wr_en), .alu_op(alu_op),
+                 .mem_read(mem_read), .mem_write(mem_write),
+                 .mem_to_reg(mem_to_reg));
+
+    Register RF0 (.clk(clk), .wr_en(wr_en), .rd_addr(rd_addr),
+                  .rs1_addr(rs1_addr), .rs2_addr(rs2_addr),
+                  .wr_data(wb_data),
+                  .rs1_data(rs1_data), .rs2_data(rs2_data));
+
+    ALU ALU0 (.a(rs1_data), .b(rs2_data), .op(alu_op),
+              .result(result), .zero(zero));
+
+    Data_Memory DM0 (.clk(clk), .mem_read(mem_read), .mem_write(mem_write),
+                  .addr(rs1_data), .wr_data(rs2_data),
+                  .rd_data(rd_data));
+
+    assign wb_data = mem_to_reg ? rd_data : result;
+
+endmodule
