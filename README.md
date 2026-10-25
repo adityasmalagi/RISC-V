@@ -187,3 +187,41 @@ rs2_data       -> wr_data   (the value a STORE writes)
 Control Unit   -> mem_read, mem_write
 rd_data        -> Write-back MUX -> Register File
 ```
+
+## Top Level CPU
+
+Connects all six modules into a single-cycle 4-bit CPU. It has no logic of its own except the write-back mux. The only ports are `clk` and `rst`, and the internal signals are observed in simulation.
+
+- Structural design: each module is instantiated once and connected with named ports
+- The instruction is split into fields: `[7:6]` opcode, `[5:4]` Rd, `[3:2]` Rs1, `[1:0]` Rs2
+- The PC, register file write and data memory write are clocked. Everything else is combinational
+- Write-back mux: `mem_to_reg` selects the ALU result (0) or the data memory output (1)
+- Branches are not supported yet, so the PC `load` input is tied to 0
+- Data memory address comes from `rs1_data`, so LOAD is `Rd = Mem[Rs1]` and STORE is `Mem[Rs1] = Rs2`
+- Registers and data memory are preloaded with an `initial` block for simulation only (R2 = 4, dm[0..3] = 5, 10, 3, 7)
+
+### Data flow
+```
+PC -> Instruction Memory -> Control Unit
+                         -> Register File -> ALU -> Write-back MUX -> Register File
+                                          -> Data Memory -> Write-back MUX
+```
+
+### Test program
+| Addr | Instruction | Meaning | Result |
+|------|-------------|---------|--------|
+| 0 | `00_01_00_10` | ADD R1 = R0 + R2 | R1 = 4 |
+| 1 | `01_11_01_00` | SUB R3 = R1 - R0 | R3 = 4 |
+| 2 | `10_01_00_00` | LOAD R1 = Mem[R0] | R1 = 5 |
+| 3 | `11_00_10_11` | STORE Mem[R2] = R3 | Mem[4] = 4 |
+| 4 | `00_10_01_11` | ADD R2 = R1 + R3 | R2 = 9 |
+| 5 to 15 | `00_00_00_00` | NOP | No change |
+
+### Verified in simulation
+- The PC counts 0 to 5 and beyond, one step per clock
+- Final registers: R0 = 0, R1 = 5, R2 = 9, R3 = 4
+- STORE wrote 4 into data memory address 4, and no register was written during the STORE
+- LOAD read 5 from address 0 into R1 through the write-back mux
+
+### Bug found during debugging
+The PC output stayed at 1 instead of counting because the increment used `pc_in + 1` instead of `pc_out + 1`. It was fixed by incrementing the current PC value.
