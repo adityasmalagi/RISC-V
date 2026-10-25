@@ -1,0 +1,47 @@
+`timescale 1ns / 1ps
+
+module Data_Memory_tb();
+reg clk,mem_read,mem_write;
+reg [3:0] addr,wr_data;
+wire [3:0] rd_data;
+
+Data_Memory dut(.clk(clk), .mem_write(mem_write), .mem_read(mem_read), .addr(addr), .wr_data(wr_data), .rd_data(rd_data));
+
+always #5 clk = ~clk;
+initial begin
+clk = 0; 
+mem_read = 0; 
+mem_write = 0;
+addr = 4'd0;
+wr_data = 4'd0; #10;
+
+//READ the preloaded values
+mem_read = 1; addr = 4'd0; #10;
+addr = 4'd1; #10;
+addr = 4'd2; #10;
+addr = 4'd3; #10;
+
+// write 15 to address 5
+mem_read = 0;
+mem_write = 1;
+addr = 4'd5;
+wr_data = 4'd15; #10;
+
+// read it back
+mem_write = 0;
+mem_read = 1;
+addr = 4'd5; #10;
+
+//overwrite address 0 with 9
+mem_read = 0; 
+mem_write = 1; 
+addr = 4'd0; 
+wr_data = 4'd9; #10;
+
+mem_write = 0; mem_read = 1; addr = 4'd0; #10;
+
+// reading disabled
+mem_read = 0; #10;
+$finish;
+end
+endmodule
