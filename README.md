@@ -143,3 +143,47 @@ Instruction Memory -> inst[7:6] -> Control Unit
                                      -> mem_write   -> Data Memory
                                      -> mem_to_reg  -> Write-back MUX
 ```
+## Data Memory
+
+The RAM of the CPU. It stores the data values the program works on. STORE writes a register value into memory, and LOAD reads a value from memory into a register.
+
+- RAM (read and write), unlike the instruction memory which is read only
+- Write is sequential: it happens on the rising clock edge when `mem_write = 1`, using `always @(posedge clk)` with `<=`
+- Read is combinational: the data appears as soon as the address changes when `mem_read = 1`, using `assign`
+- When `mem_read = 0`, `rd_data` is forced to 0
+- 4-bit address gives 16 locations, each 4 bits wide
+- An `initial` block preloads the memory so a LOAD reads real values instead of `X` in simulation. It is for simulation only and does not synthesize
+
+### Ports
+| Port | Direction | Purpose |
+|------|-----------|---------|
+| `clk` | input | Writes happen on the rising edge |
+| `mem_read` | input | 1 = output the data at `addr` |
+| `mem_write` | input | 1 = store `wr_data` at `addr` |
+| `addr[3:0]` | input | Memory location |
+| `wr_data[3:0]` | input | Value to store |
+| `rd_data[3:0]` | output | Value read from `addr` |
+
+### Control signals
+The control unit decides when to read and write:
+- LOAD sets `mem_read = 1`
+- STORE sets `mem_write = 1`
+
+### Instruction memory vs data memory
+| | Instruction Memory | Data Memory |
+|---|---|---|
+| Type | ROM | RAM |
+| Operations | Read only | Read and write |
+| Clock | None | Write on clock edge |
+| Holds | The program | The data |
+| Width | 8 bits | 4 bits |
+
+Keeping the two separate is called Harvard architecture. It lets the CPU fetch an instruction and access data in the same cycle.
+
+### Connections
+```
+rs1_data       -> addr      (where to read or write)
+rs2_data       -> wr_data   (the value a STORE writes)
+Control Unit   -> mem_read, mem_write
+rd_data        -> Write-back MUX -> Register File
+```
