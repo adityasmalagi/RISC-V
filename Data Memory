@@ -1,0 +1,34 @@
+`timescale 1ns / 1ps
+
+module Data_Memory(
+input clk,
+input mem_read,
+input mem_write,
+input [3:0]addr,
+input [3:0]wr_data,
+input [3:0]rd_data
+    );
+    
+    reg[3:0] dm[0:15];
+    integer i;
+    
+    //preload so the memory is never x in simualation
+    initial begin
+    for(i = 0;i<16;i = i + 1)
+    dm[i] = 4'd0;
+    dm[0] = 4'd5;
+    dm[1] = 4'd10;
+    dm[2] = 4'd3;
+    dm[3] = 4'd7;
+  end
+  
+  //write : sequential
+  always@(posedge clk)begin
+  if(mem_write)
+  dm[addr] <= wr_data;
+  end
+  
+  //read : combinational
+  assign rd_data = mem_read ? dm[addr] : 4'd0;
+  
+endmodule
